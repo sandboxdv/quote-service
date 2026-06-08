@@ -1,0 +1,54 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.6'
+	id 'io.spring.dependency-management' version '1.1.7'
+	id 'org.graalvm.buildtools.native' version '0.11.5'
+}
+
+group = 'com.polarbookshop'
+version = '0.0.1-SNAPSHOT'
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(25)
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-webflux'
+	
+	testImplementation 'org.springframework.boot:spring-boot-starter-webflux-test'
+	testImplementation 'io.projectreactor:reactor-test'
+}
+
+tasks.named('bootBuildImage') {
+	builder = 'paketobuildpacks/builder-jammy-tiny'
+	environment = ['BP_NATIVE_IMAGE': 'true']
+	imageName = "${project.name}"
+
+	docker {
+		publishRegistry {
+			username = project.findProperty("registryUsername")
+			password = project.findProperty("registryToken")
+			url = project.findProperty("registryUrl")
+		}
+	}
+}
+
+graalvmNative {
+	binaries {
+		named("test") {
+			// Allocates 8GB to the native-image build JVM to prevent
+			// a SIGSEGV crash in Parallel GC during nativeTest compilation.
+			buildArgs.add('-J-Xmx8g')
+		}
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}
