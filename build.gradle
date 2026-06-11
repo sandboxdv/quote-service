@@ -27,7 +27,10 @@ dependencies {
 
 tasks.named('bootBuildImage') {
 	builder = 'paketobuildpacks/builder-jammy-tiny'
-	environment = ['BP_NATIVE_IMAGE': 'true']
+	environment = [
+			'BP_NATIVE_IMAGE': 'true',
+			'BP_NATIVE_IMAGE_BUILD_ARGUMENTS': '-march=compatibility'
+	]
 	imageName = "${project.name}"
 
 	docker {
